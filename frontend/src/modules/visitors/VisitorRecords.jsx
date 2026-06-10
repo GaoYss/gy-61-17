@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { EmptyState } from "../../components/EmptyState";
 import { StatusBadge } from "../../components/StatusBadge";
+import { showToast } from "../../components/Toast";
 import { accessApi } from "../../api/client";
 import { formatDateTime } from "../../utils/format";
 
@@ -22,8 +23,10 @@ export function VisitorRecords({ data, externalFilter }) {
   const [searchError, setSearchError] = useState("");
   const [highlightedId, setHighlightedId] = useState(null);
   const [pendingId, setPendingId] = useState(null);
+  const [manuallyTouched, setManuallyTouched] = useState(() => new Set());
   const cardRefs = useRef({});
   const lastFilterSeq = useRef(0);
+  const lastStatusRef = useRef("");
 
   useEffect(() => {
     if (!searching && keyword === "") {
@@ -32,8 +35,16 @@ export function VisitorRecords({ data, externalFilter }) {
   }, [data.visitors, keyword, searching]);
 
   useEffect(() => {
+    if (status !== lastStatusRef.current) {
+      setManuallyTouched(new Set());
+      lastStatusRef.current = status;
+    }
+  }, [status]);
+
+  useEffect(() => {
     if (!externalFilter?.seq || externalFilter.seq === lastFilterSeq.current) return;
     lastFilterSeq.current = externalFilter.seq;
+    setManuallyTouched(new Set());
     if (externalFilter.status !== undefined) {
       setStatus(externalFilter.status);
     }
@@ -55,6 +66,7 @@ export function VisitorRecords({ data, externalFilter }) {
 
   const handleSearch = async () => {
     setSearchError("");
+    setManuallyTouched(new Set());
     if (!keyword.trim()) {
       setVisitors(data.visitors);
       setSearching(false);
@@ -67,6 +79,7 @@ export function VisitorRecords({ data, externalFilter }) {
     } catch (error) {
       setSearchError(error.message || "搜索失败");
       setVisitors([]);
+      showToast("搜索失败", "error");
     } finally {
       setSearching(false);
     }
@@ -75,21 +88,32 @@ export function VisitorRecords({ data, externalFilter }) {
   const handleReset = () => {
     setKeyword("");
     setStatus("");
+    setManuallyTouched(new Set());
     setVisitors(data.visitors);
     setSearchError("");
     setSearching(false);
+  };
+
+  const applyLocalUpdate = (id, updated) => {
+    const apply = (list) => list.map((v) => (v.id === id ? { ...v, ...updated } : v));
+    setVisitors(apply);
+    data.updateVisitor(id, updated);
+    setManuallyTouched((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
   };
 
   const handleApprove = async (visitor) => {
     setPendingId(visitor.id);
     try {
       const updated = await accessApi.updateVisitor(visitor.id, { pass_status: "approved" });
-      data.updateVisitor(visitor.id, updated);
-      const apply = (list) => list.map((v) => (v.id === visitor.id ? { ...v, ...updated } : v));
-      setVisitors(apply);
+      applyLocalUpdate(visitor.id, updated);
+      showToast(`已批准访客「${visitor.visitor_name}」`, "success");
       scrollToCard(visitor.id);
     } catch (error) {
-      alert(`审批失败：${error.message}`);
+      showToast(`审批失败：${error.message}`, "error");
     } finally {
       setPendingId(null);
     }
@@ -100,11 +124,10 @@ export function VisitorRecords({ data, externalFilter }) {
     setPendingId(visitor.id);
     try {
       const updated = await accessApi.updateVisitor(visitor.id, { pass_status: "rejected" });
-      data.updateVisitor(visitor.id, updated);
-      const apply = (list) => list.map((v) => (v.id === visitor.id ? { ...v, ...updated } : v));
-      setVisitors(apply);
+      applyLocalUpdate(visitor.id, updated);
+      showToast(`已拒绝访客「${visitor.visitor_name}」`, "success");
     } catch (error) {
-      alert(`拒绝失败：${error.message}`);
+      showToast(`拒绝失败：${error.message}`, "error");
     } finally {
       setPendingId(null);
     }
@@ -112,8 +135,8 @@ export function VisitorRecords({ data, externalFilter }) {
 
   const filteredVisitors = useMemo(() => {
     if (!status) return visitors;
-    return visitors.filter((v) => v.pass_status === status);
-  }, [visitors, status]);
+    return visitors.filter((v) => v.pass_status === status || manuallyTouched.has(v.id));
+  }, [visitors, status, manuallyTouched]);
 
   return (
     <section className="view-stack">

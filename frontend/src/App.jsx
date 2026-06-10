@@ -6,6 +6,7 @@ import { Dashboard } from "./modules/dashboard/Dashboard";
 import { DeviceManagement } from "./modules/devices/DeviceManagement";
 import { DoorLogSearch } from "./modules/logs/DoorLogSearch";
 import { VisitorRecords } from "./modules/visitors/VisitorRecords";
+import { ToastContainer } from "./components/Toast";
 import { useAccessData } from "./hooks/useAccessData";
 
 export default function App() {
@@ -36,8 +37,11 @@ export default function App() {
   }, [accessData, activeView, jumpToVisitorFilter, visitorFilter]);
 
   return (
-    <AppShell activeView={activeView} onChangeView={setActiveView}>
-      {content}
-    </AppShell>
+    <>
+      <ToastContainer />
+      <AppShell activeView={activeView} onChangeView={setActiveView}>
+        {content}
+      </AppShell>
+    </>
   );
 }

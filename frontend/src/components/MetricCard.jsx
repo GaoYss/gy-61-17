@@ -1,8 +1,19 @@
 import { ChevronRight } from "lucide-react";
 
 export function MetricCard({ label, value, tone = "blue", onClick, hint }) {
+  const handleKeyDown = (e) => {
+    if (!onClick) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   const className = `metric-card tone-${tone}${onClick ? " clickable" : ""}`;
-  const props = onClick ? { className, onClick, role: "button", tabIndex: 0 } : { className };
+  const props = onClick
+    ? { className, onClick, onKeyDown: handleKeyDown, role: "button", tabIndex: 0 }
+    : { className };
+
   return (
     <div {...props}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
