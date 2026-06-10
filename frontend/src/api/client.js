@@ -24,7 +24,19 @@ function unwrapList(payload) {
 export const accessApi = {
   stats: () => request("/stats/"),
   devices: () => request("/devices/").then(unwrapList),
-  visitors: (status = "") => request(`/visitors/${status ? `?status=${status}` : ""}`).then(unwrapList),
+  visitors: (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    const query = params.toString();
+    return request(`/visitors/${query ? `?${query}` : ""}`).then(unwrapList);
+  },
+  updateVisitor: (id, data) =>
+    request(`/visitors/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
   alarms: (status = "") => request(`/alarms/${status ? `?status=${status}` : ""}`).then(unwrapList),
   doorLogs: (filters = {}) => {
     const params = new URLSearchParams();

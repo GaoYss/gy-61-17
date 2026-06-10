@@ -418,6 +418,94 @@ dd {
   background: #ffffff;
 }
 
+.record-card.highlighted {
+  border-color: #4b83d8;
+  box-shadow: 0 0 0 3px rgba(75, 131, 216, 0.25), 0 10px 24px rgba(23, 32, 42, 0.08);
+  animation: highlight-pulse 2s ease-out;
+}
+
+@keyframes highlight-pulse {
+  0% { box-shadow: 0 0 0 6px rgba(75, 131, 216, 0.35), 0 10px 24px rgba(23, 32, 42, 0.08); }
+  100% { box-shadow: 0 0 0 3px rgba(75, 131, 216, 0.25), 0 10px 24px rgba(23, 32, 42, 0.08); }
+}
+
+.record-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #e2e8ed;
+}
+
+.btn-approve,
+.btn-reject {
+  flex: 1;
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-approve {
+  color: #ffffff;
+  background: #2f9e6d;
+}
+
+.btn-approve:hover {
+  background: #257e57;
+}
+
+.btn-approve:disabled {
+  background: #a3d1bc;
+  cursor: not-allowed;
+}
+
+.btn-reject {
+  color: #ffffff;
+  background: #d74d4d;
+}
+
+.btn-reject:hover {
+  background: #b53f3f;
+}
+
+.btn-reject:disabled {
+  background: #e8a0a0;
+  cursor: not-allowed;
+}
+
+.filter-bar .search-btn {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 18px;
+  background: #4b83d8;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filter-bar .search-btn:hover {
+  background: #3a6db8;
+}
+
+.filter-bar .reset-btn {
+  min-height: 42px;
+  border: 1px solid #ccd7e0;
+  border-radius: 8px;
+  padding: 0 14px;
+  background: #fff;
+  color: #536272;
+  cursor: pointer;
+}
+
+.filter-bar .reset-btn:hover {
+  background: #f5f7f9;
+}
+
 .empty-state,
 .error-panel {
   color: #6b7785;

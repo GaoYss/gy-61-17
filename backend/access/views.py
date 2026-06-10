@@ -25,9 +25,20 @@ class VisitorPassViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = VisitorPass.objects.select_related("device")
         status_value = self.request.query_params.get("status")
+        name_value = self.request.query_params.get("name")
         if status_value:
             queryset = queryset.filter(pass_status=status_value)
+        if name_value:
+            queryset = queryset.filter(visitor_name=name_value)
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        name_value = request.query_params.get("name")
+        if name_value:
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        return super().list(request, *args, **kwargs)
 
 
 class AlarmViewSet(viewsets.ModelViewSet):
