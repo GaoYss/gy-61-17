@@ -5,12 +5,14 @@ import { MetricCard } from "../../components/MetricCard";
 import { StatusBadge } from "../../components/StatusBadge";
 import { formatDateTime } from "../../utils/format";
 
-export function Dashboard({ data }) {
+export function Dashboard({ data, onJumpToVisitor }) {
   if (data.loading) return <section className="panel">数据加载中...</section>;
   if (data.error) return <section className="panel error-panel">{data.error}</section>;
 
   const latestAlarms = data.alarms.slice(0, 3);
   const latestLogs = data.logs.slice(0, 5);
+
+  const firstPending = data.visitors.find((v) => v.pass_status === "pending");
 
   return (
     <section className="view-stack">
@@ -24,7 +26,12 @@ export function Dashboard({ data }) {
       <div className="metrics-grid">
         <MetricCard label="门禁设备" value={data.stats.devices_total} tone="blue" />
         <MetricCard label="在线设备" value={data.stats.devices_online} tone="green" />
-        <MetricCard label="待审批访客" value={data.stats.visitors_pending} tone="amber" />
+        <MetricCard
+          label="待审批访客"
+          value={data.stats.visitors_pending}
+          tone="amber"
+          onClick={() => firstPending && onJumpToVisitor?.(firstPending.id)}
+        />
         <MetricCard label="未处理告警" value={data.stats.open_alarms} tone="red" />
         <MetricCard label="今日成功开门" value={data.stats.today_success_logs} tone="teal" />
       </div>

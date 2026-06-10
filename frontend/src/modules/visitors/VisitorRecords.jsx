@@ -23,6 +23,7 @@ export function VisitorRecords({ data, onHighlightId }) {
   const [highlightedId, setHighlightedId] = useState(null);
   const [pendingId, setPendingId] = useState(null);
   const cardRefs = useRef({});
+  const lastHighlightSeq = useRef(0);
 
   useEffect(() => {
     if (!searching && keyword === "") {
@@ -31,37 +32,44 @@ export function VisitorRecords({ data, onHighlightId }) {
   }, [data.visitors, keyword, searching]);
 
   const scrollToCard = useCallback((id) => {
-    const el = cardRefs.current[id];
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      setHighlightedId(id);
-      setTimeout(() => setHighlightedId(null), 2500);
-    }
+    requestAnimationFrame(() => {
+      const el = cardRefs.current[id];
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightedId(id);
+        setTimeout(() => setHighlightedId(null), 2500);
+      }
+    });
   }, []);
 
   useEffect(() => {
-    if (onHighlightId?.id) {
-      const id = onHighlightId.id;
+    if (!onHighlightId?.id || onHighlightId.seq === lastHighlightSeq.current) return;
+    lastHighlightSeq.current = onHighlightId.seq;
+    const id = onHighlightId.id;
+
+    const tryScroll = () => {
       if (visitors.some((v) => v.id === id)) {
         scrollToCard(id);
-      } else if (keyword === "") {
+      } else {
+        setKeyword("");
+        setStatus("");
         accessApi.visitors().then((list) => {
           setVisitors(list);
-          setTimeout(() => scrollToCard(id), 100);
+          setTimeout(() => scrollToCard(id), 50);
         });
       }
-    }
-  }, [onHighlightId, visitors, keyword, scrollToCard]);
+    };
+    tryScroll();
+  }, [onHighlightId, visitors, scrollToCard]);
 
   const handleSearch = async () => {
+    setSearchError("");
     if (!keyword.trim()) {
       setVisitors(data.visitors);
       setSearching(false);
-      setSearchError("");
       return;
     }
     setSearching(true);
-    setSearchError("");
     try {
       const result = await accessApi.visitors({ name: keyword.trim() });
       setVisitors(result);
@@ -85,7 +93,11 @@ export function VisitorRecords({ data, onHighlightId }) {
     setPendingId(visitor.id);
     try {
       const updated = await accessApi.updateVisitor(visitor.id, { pass_status: "approved" });
-      setVisitors((list) => list.map((v) => (v.id === visitor.id ? { ...v, ...updated } : v)));
+      const apply = (list) => list.map((v) => (v.id === visitor.id ? { ...v, ...updated } : v));
+      setVisitors(apply);
+      if (keyword === "") {
+        data.visitors = apply(data.visitors);
+      }
       scrollToCard(visitor.id);
     } catch (error) {
       alert(`审批失败：${error.message}`);
@@ -99,7 +111,11 @@ export function VisitorRecords({ data, onHighlightId }) {
     setPendingId(visitor.id);
     try {
       const updated = await accessApi.updateVisitor(visitor.id, { pass_status: "rejected" });
-      setVisitors((list) => list.map((v) => (v.id === visitor.id ? { ...v, ...updated } : v)));
+      const apply = (list) => list.map((v) => (v.id === visitor.id ? { ...v, ...updated } : v));
+      setVisitors(apply);
+      if (keyword === "") {
+        data.visitors = apply(data.visitors);
+      }
     } catch (error) {
       alert(`拒绝失败：${error.message}`);
     } finally {

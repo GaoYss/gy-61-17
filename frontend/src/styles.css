@@ -134,6 +134,21 @@ select {
   border-left: 4px solid #4b83d8;
 }
 
+.metric-card.clickable {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.metric-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(23, 32, 42, 0.12);
+}
+
+.metric-card.clickable:focus-visible {
+  outline: 2px solid #4b83d8;
+  outline-offset: 2px;
+}
+
 .metric-card span {
   display: block;
   color: #657486;

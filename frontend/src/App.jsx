@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { AppShell } from "./components/AppShell";
 import { AlarmCenter } from "./modules/alarms/AlarmCenter";
@@ -10,19 +10,25 @@ import { useAccessData } from "./hooks/useAccessData";
 
 export default function App() {
   const [activeView, setActiveView] = useState("dashboard");
+  const [visitorHighlight, setVisitorHighlight] = useState({ id: null, seq: 0 });
   const accessData = useAccessData();
 
+  const jumpToVisitor = useCallback((visitorId) => {
+    setVisitorHighlight({ id: visitorId, seq: Date.now() });
+    setActiveView("visitors");
+  }, []);
+
   const content = useMemo(() => {
-    const props = { data: accessData };
+    const commonProps = { data: accessData };
     const views = {
-      dashboard: <Dashboard {...props} />,
-      devices: <DeviceManagement {...props} />,
-      visitors: <VisitorRecords {...props} />,
-      alarms: <AlarmCenter {...props} />,
-      logs: <DoorLogSearch {...props} />,
+      dashboard: <Dashboard {...commonProps} onJumpToVisitor={jumpToVisitor} />,
+      devices: <DeviceManagement {...commonProps} />,
+      visitors: <VisitorRecords {...commonProps} onHighlightId={visitorHighlight.seq ? visitorHighlight : null} />,
+      alarms: <AlarmCenter {...commonProps} />,
+      logs: <DoorLogSearch {...commonProps} />,
     };
     return views[activeView] || views.dashboard;
-  }, [accessData, activeView]);
+  }, [accessData, activeView, jumpToVisitor, visitorHighlight]);
 
   return (
     <AppShell activeView={activeView} onChangeView={setActiveView}>
