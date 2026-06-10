@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { accessApi } from "../api/client";
 
@@ -41,5 +41,34 @@ export function useAccessData() {
     };
   }, []);
 
-  return useMemo(() => state, [state]);
+  const refreshStats = useCallback(async () => {
+    try {
+      const stats = await accessApi.stats();
+      setState((current) => ({ ...current, stats }));
+    } catch (error) {
+      // ignore
+    }
+  }, []);
+
+  const updateVisitor = useCallback((id, patch) => {
+    setState((current) => {
+      const visitors = current.visitors.map((v) => (v.id === id ? { ...v, ...patch } : v));
+      return { ...current, visitors };
+    });
+    refreshStats();
+  }, [refreshStats]);
+
+  const reloadVisitors = useCallback(async () => {
+    try {
+      const visitors = await accessApi.visitors();
+      setState((current) => ({ ...current, visitors }));
+    } catch (error) {
+      // ignore
+    }
+  }, []);
+
+  return useMemo(
+    () => ({ ...state, updateVisitor, reloadVisitors }),
+    [state, updateVisitor, reloadVisitors]
+  );
 }

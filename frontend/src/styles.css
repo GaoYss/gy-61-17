@@ -149,6 +149,24 @@ select {
   outline-offset: 2px;
 }
 
+.metric-hint {
+  font-size: 11px !important;
+  color: #8b98a7 !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+}
+
+.metric-arrow {
+  color: #8b98a7;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.metric-card.clickable:hover .metric-arrow {
+  transform: translateX(3px);
+  color: #4b83d8;
+}
+
 .metric-card span {
   display: block;
   color: #657486;
